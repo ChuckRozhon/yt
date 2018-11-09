@@ -3,28 +3,40 @@ uniform float tf_max;
 uniform float tf_log;
 uniform sampler1D tf_tex;
 
+float gaussian(float center, float w, float h, float x)
+{
+    return h * exp(- pow(x - center, 2) / w);
+}
+
+vec4 fake_texture(float tex_sample)
+{
+    float center = 0.50;
+
+    float rgb_val = gaussian(center, 0.1, 0.5, tex_sample);
+    vec4 ret =  vec4(rgb_val);
+    ret.a = gaussian(center, 0.2, 0.7, tex_sample);
+
+    return ret;
+}
+
 void sample_texture(vec3 tex_curr_pos, inout vec4 curr_color, float tdelta,
                     float t, vec3 dir)
 {
     float tm = tf_min;
     float tp = tf_max;
-    vec4 tf_sample;
- 
-    float tex_sample = texture(ds_tex, tex_curr_pos).x;
- 
-    if (tf_log > 0.5) {
-       tex_sample = log(tex_sample) / log(10.f);
-       tm = log(tm) / log(10.f);
-       tp = log(tp) / log(10.f);
-    }
-    tf_sample = texture(tf_tex, (tex_sample - tm) / (tp - tm));
 
-    float ta = max((1.0f - tdelta * tf_sample.a), 0.0);
-    curr_color = tdelta * tf_sample + ta * curr_color;
+    vec4 tf_sample; 
+
+    float tex_sample = texture(ds_tex, tex_curr_pos).x;
+
+    //tf_sample = texture(tf_tex, (tex_sample - tm) / (tp - tm));
+    tf_sample = fake_texture(tex_sample);
+
+    curr_color.rgb = (tf_sample * (1.0f - curr_color.a) + curr_color).rgb;
+    curr_color.a = (1.0f - (1.0f - curr_color.a) * max((1.0f - tf_sample.a), 0.0));
 }
 
 vec4 cleanup_phase(in vec4 curr_color) 
 {
   return vec4(curr_color);
 }
-

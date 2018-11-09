@@ -210,7 +210,6 @@ class TrackballCamera(IDVCamera):
     https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Arcball
 
     """
-
     @property
     def proj_func(self):
         return get_perspective_matrix
